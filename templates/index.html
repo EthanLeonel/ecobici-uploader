@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ecobici CDMX — Cargador de Datos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+  <div class="max-w-2xl mx-auto px-4 py-12">
+
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="text-5xl mb-3">🚲</div>
+      <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Ecobici CDMX</h1>
+      <p class="text-gray-500 mt-1 text-sm">Cargador de datasets mensuales · Cloud Storage</p>
+    </div>
+
+    <!-- Instrucciones -->
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6 text-sm">
+      <h2 class="font-semibold text-blue-800 mb-2 text-base">¿Cómo usar esta herramienta?</h2>
+      <ul class="text-blue-700 space-y-1 list-disc list-inside leading-relaxed">
+        <li>Descarga el dataset mensual desde el portal de Ecobici CDMX.</li>
+        <li>Renombra el archivo con el formato <strong>YYYY-MM.csv</strong>
+            &nbsp;— ejemplo: <code class="bg-blue-100 px-1 rounded">2026-01.csv</code></li>
+        <li>Arrastra o selecciona el archivo en el área de abajo y haz clic en <strong>Subir</strong>.</li>
+        <li>El archivo se guardará en el bucket
+            <code class="bg-blue-100 px-1 rounded">{{ bucket }}</code>
+            dentro de la carpeta <code class="bg-blue-100 px-1 rounded">raw/</code>.</li>
+        <li>Cada mes tiene su archivo independiente; no se sobreescriben otros meses.</li>
+      </ul>
+    </div>
+
+    <!-- Card de carga -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+
+      <form id="uploadForm" novalidate>
+        <!-- Zona de drop -->
+        <div
+          id="dropZone"
+          class="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer
+                 hover:border-green-400 hover:bg-green-50 transition-all"
+        >
+          <div class="text-5xl mb-2" id="dropIcon">📂</div>
+          <p class="text-gray-600 font-medium">Arrastra tu archivo CSV aquí</p>
+          <p class="text-gray-400 text-sm mt-1">o haz clic para seleccionar</p>
+          <input type="file" id="fileInput" accept=".csv" class="hidden" />
+          <p id="fileName" class="mt-3 text-green-600 font-semibold text-sm hidden"></p>
+        </div>
+
+        <button
+          type="submit"
+          id="submitBtn"
+          class="mt-5 w-full bg-green-600 hover:bg-green-700 active:bg-green-800
+                 text-white font-semibold py-3 px-6 rounded-lg transition-colors
+                 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Subir a Cloud Storage
+        </button>
+      </form>
+
+      <!-- Progreso -->
+      <div id="progress" class="hidden mt-5 flex items-center gap-3 text-gray-500 text-sm">
+        <svg class="animate-spin h-5 w-5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        Subiendo archivo, por favor espera…
+      </div>
+
+      <!-- Éxito -->
+      <div id="successMsg"
+        class="hidden mt-5 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+        <span class="text-green-500 text-2xl shrink-0">✅</span>
+        <div>
+          <p id="successText" class="font-semibold text-green-800 text-sm"></p>
+          <p id="successPath" class="text-green-600 text-xs mt-1 font-mono break-all"></p>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div id="errorMsg"
+        class="hidden mt-5 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+        <span class="text-red-500 text-2xl shrink-0">❌</span>
+        <p id="errorText" class="text-red-700 text-sm"></p>
+      </div>
+
+    </div>
+
+    <p class="text-center text-gray-400 text-xs mt-8">
+      Análisis del comportamiento de Ecobici en la CDMX · Maestría en Ciencia de Datos
+    </p>
+  </div>
+
+  <script>
+    const dropZone   = document.getElementById('dropZone');
+    const fileInput  = document.getElementById('fileInput');
+    const fileName   = document.getElementById('fileName');
+    const form       = document.getElementById('uploadForm');
+    const submitBtn  = document.getElementById('submitBtn');
+    const progress   = document.getElementById('progress');
+    const successMsg = document.getElementById('successMsg');
+    const errorMsg   = document.getElementById('errorMsg');
+
+    // Click en zona → abre selector de archivos
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Drag & Drop
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('border-green-400', 'bg-green-50');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-green-400', 'bg-green-50');
+    });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('border-green-400', 'bg-green-50');
+      const f = e.dataTransfer.files[0];
+      if (f) setFile(f);
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files[0]) setFile(fileInput.files[0]);
+    });
+
+    function setFile(f) {
+      fileName.textContent = `📄 ${f.name}`;
+      fileName.classList.remove('hidden');
+      // Inyectar en el input nativo para el FormData
+      const dt = new DataTransfer();
+      dt.items.add(f);
+      fileInput.files = dt.files;
+      hide([successMsg, errorMsg]);
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const f = fileInput.files[0];
+      if (!f) { showError('Por favor selecciona un archivo CSV.'); return; }
+
+      hide([successMsg, errorMsg]);
+      show([progress]);
+      submitBtn.disabled = true;
+
+      try {
+        const body = new FormData();
+        body.append('file', f);
+        const res  = await fetch('/upload', { method: 'POST', body });
+        const data = await res.json();
+
+        hide([progress]);
+        submitBtn.disabled = false;
+
+        if (res.ok) {
+          document.getElementById('successText').textContent = data.message;
+          document.getElementById('successPath').textContent = data.destino;
+          show([successMsg]);
+        } else {
+          showError(data.detail || 'Error desconocido.');
+        }
+      } catch {
+        hide([progress]);
+        submitBtn.disabled = false;
+        showError('Error de red. Verifica tu conexión e intenta de nuevo.');
+      }
+    });
+
+    function show(els) { els.forEach(el => el.classList.remove('hidden')); }
+    function hide(els) { els.forEach(el => el.classList.add('hidden')); }
+    function showError(msg) {
+      document.getElementById('errorText').textContent = msg;
+      show([errorMsg]);
+    }
+  </script>
+</body>
+</html>
