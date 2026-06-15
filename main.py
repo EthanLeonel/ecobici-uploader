@@ -44,8 +44,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 app.add_middleware(SecurityHeadersMiddleware)
 
 # ── Tipos de archivo ──────────────────────────────────────────────────────────
-VIAJES_RE    = re.compile(r"^viajes-\d{4}-(0[1-9]|1[0-2])\.csv$")
-CICLOVIAS_RE = re.compile(r"^ciclovias-\d{4}-(0[1-9]|1[0-2])\.csv$")
+VIAJES_RE     = re.compile(r"^viajes-\d{4}-(0[1-9]|1[0-2])\.csv$")
+ESTACIONES_RE = re.compile(r"^estaciones-\d{4}-(0[1-9]|1[0-2])\.csv$")
 
 VIAJES_COLS = {
     "Genero_Usuario", "Edad_Usuario", "Bici",
@@ -53,7 +53,7 @@ VIAJES_COLS = {
     "Ciclo_EstacionArribo", "Fecha_Arribo", "Hora_Arribo",
 }
 
-CICLOVIAS_COLS = {
+ESTACIONES_COLS = {
     "sistema", "num_cicloe", "calle_prin", "calle_secu",
     "colonia", "alcaldia", "latitud", "longitud", "sitio_de_e", "estatus",
 }
@@ -67,8 +67,8 @@ def detect_type(filename: str):
     """Devuelve (tipo, carpeta) según el prefijo del nombre, o (None, None) si no aplica."""
     if VIAJES_RE.match(filename):
         return "viajes", "viajes"
-    if CICLOVIAS_RE.match(filename):
-        return "ciclovias", "ciclovias"
+    if ESTACIONES_RE.match(filename):
+        return "estaciones", "estaciones"
     return None, None
 
 
@@ -89,7 +89,7 @@ class UploadUrlRequest(BaseModel):
 @limiter.limit("10/minute")
 async def get_upload_url(request: Request, body: UploadUrlRequest):
     """
-    Valida el nombre del archivo, detecta el tipo (viajes / ciclovias) y
+    Valida el nombre del archivo, detecta el tipo (viajes / estaciones) y
     devuelve una Signed URL de GCS para upload directo desde el browser.
     """
     filename = body.filename.strip()
@@ -98,7 +98,7 @@ async def get_upload_url(request: Request, body: UploadUrlRequest):
     if tipo is None:
         raise HTTPException(
             400,
-            "El nombre debe ser viajes-YYYY-MM.csv o ciclovias-YYYY-MM.csv "
+            "El nombre debe ser viajes-YYYY-MM.csv o estaciones-YYYY-MM.csv "
             f"(ej. viajes-2026-01.csv). Se recibió: {filename}",
         )
 

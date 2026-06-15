@@ -22,8 +22,8 @@
       <ul class="text-blue-700 space-y-1 list-disc list-inside leading-relaxed">
         <li>Renombra el archivo de viajes con el formato <strong>viajes-YYYY-MM.csv</strong>
             &nbsp;— ejemplo: <code class="bg-blue-100 px-1 rounded">viajes-2026-01.csv</code></li>
-        <li>Renombra el archivo de ciclovías con el formato <strong>ciclovias-YYYY-MM.csv</strong>
-            &nbsp;— ejemplo: <code class="bg-blue-100 px-1 rounded">ciclovias-2026-01.csv</code></li>
+        <li>Renombra el archivo de estaciones con el formato <strong>estaciones-YYYY-MM.csv</strong>
+            &nbsp;— ejemplo: <code class="bg-blue-100 px-1 rounded">estaciones-2026-01.csv</code></li>
         <li>Sube cada archivo en su sección correspondiente. Cada mes es independiente y no sobreescribe otros meses.</li>
       </ul>
     </div>
@@ -82,24 +82,24 @@
         </div>
       </div>
 
-      <!-- ── SECCIÓN CICLOVÍAS ─────────────────────────────────────── -->
+      <!-- ── SECCIÓN ESTACIONES ────────────────────────────────────── -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col">
         <div class="mb-4">
           <span class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
-            📍 Ciclovías
+            📍 Estaciones
           </span>
-          <p class="text-xs text-gray-400 mt-1">ciclovias-YYYY-MM.csv</p>
+          <p class="text-xs text-gray-400 mt-1">estaciones-YYYY-MM.csv</p>
         </div>
 
-        <form id="form-ciclovias" novalidate class="flex flex-col flex-1">
-          <div id="drop-ciclovias"
+        <form id="form-estaciones" novalidate class="flex flex-col flex-1">
+          <div id="drop-estaciones"
             class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer
                    hover:border-blue-400 hover:bg-blue-50 transition-all flex-1 flex flex-col justify-center">
             <div class="text-3xl mb-1">📂</div>
             <p class="text-gray-600 text-sm font-medium">Arrastra tu archivo aquí</p>
             <p class="text-gray-400 text-xs mt-1">o haz clic para seleccionar</p>
-            <input type="file" id="input-ciclovias" accept=".csv" class="hidden" />
-            <p id="name-ciclovias" class="mt-2 text-blue-600 font-semibold text-xs hidden"></p>
+            <input type="file" id="input-estaciones" accept=".csv" class="hidden" />
+            <p id="name-estaciones" class="mt-2 text-blue-600 font-semibold text-xs hidden"></p>
           </div>
 
           <button type="submit"
@@ -109,27 +109,27 @@
           </button>
         </form>
 
-        <div id="prog-ciclovias" class="hidden mt-4">
-          <p id="prog-label-ciclovias" class="text-xs text-gray-500 mb-1 flex items-center gap-1">
+        <div id="prog-estaciones" class="hidden mt-4">
+          <p id="prog-label-estaciones" class="text-xs text-gray-500 mb-1 flex items-center gap-1">
             <svg class="animate-spin h-3 w-3 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
             </svg>
-            <span id="prog-text-ciclovias"></span>
+            <span id="prog-text-estaciones"></span>
           </p>
           <div class="w-full bg-gray-100 rounded-full h-2">
-            <div id="prog-bar-ciclovias" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width:0%"></div>
+            <div id="prog-bar-estaciones" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width:0%"></div>
           </div>
-          <p id="prog-pct-ciclovias" class="text-xs text-gray-400 mt-0.5 text-right">0%</p>
+          <p id="prog-pct-estaciones" class="text-xs text-gray-400 mt-0.5 text-right">0%</p>
         </div>
 
-        <div id="ok-ciclovias" class="hidden mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+        <div id="ok-estaciones" class="hidden mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
           <span class="text-blue-500 shrink-0">✅</span>
-          <p id="ok-text-ciclovias" class="text-blue-800 text-xs font-semibold"></p>
+          <p id="ok-text-estaciones" class="text-blue-800 text-xs font-semibold"></p>
         </div>
-        <div id="err-ciclovias" class="hidden mt-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+        <div id="err-estaciones" class="hidden mt-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
           <span class="text-red-500 shrink-0">❌</span>
-          <p id="err-text-ciclovias" class="text-red-700 text-xs"></p>
+          <p id="err-text-estaciones" class="text-red-700 text-xs"></p>
         </div>
       </div>
 
@@ -146,18 +146,18 @@
                'Ciclo_EstacionArribo','Fecha_Arribo','Hora_Arribo'],
         ejemplo: 'viajes-2026-01.csv',
       },
-      ciclovias: {
-        re: /^ciclovias-\d{4}-(0[1-9]|1[0-2])\.csv$/,
+      estaciones: {
+        re: /^estaciones-\d{4}-(0[1-9]|1[0-2])\.csv$/,
         cols: ['sistema','num_cicloe','calle_prin','calle_secu',
                'colonia','alcaldia','latitud','longitud','sitio_de_e','estatus'],
-        ejemplo: 'ciclovias-2026-01.csv',
+        ejemplo: 'estaciones-2026-01.csv',
       },
     };
 
     const MAX_MB = 300;
 
     // ── Inicializar cada sección ───────────────────────────────────────────────
-    ['viajes', 'ciclovias'].forEach(tipo => {
+    ['viajes', 'estaciones'].forEach(tipo => {
       const cfg      = TIPOS[tipo];
       const dropZone = document.getElementById(`drop-${tipo}`);
       const fileInput= document.getElementById(`input-${tipo}`);

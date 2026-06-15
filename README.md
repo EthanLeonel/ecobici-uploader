@@ -9,12 +9,12 @@ Stack: **FastAPI · Docker · Cloud Run · Artifact Registry · Cloud Build · G
 
 ```
 Usuario → Cloud Run (FastAPI)
-            ├─ Valida nombre y detecta tipo (viajes / ciclovias)
+            ├─ Valida nombre y detecta tipo (viajes / estaciones)
             └─ Devuelve Signed URL (15 min)
 
 Usuario → GCS directo (PUT con Signed URL)
             ├─ gs://BUCKET/viajes/viajes-YYYY-MM.csv
-            └─ gs://BUCKET/ciclovias/ciclovias-YYYY-MM.csv
+            └─ gs://BUCKET/estaciones/estaciones-YYYY-MM.csv
 ```
 
 > El archivo **nunca pasa por Cloud Run**. El servidor solo genera la URL firmada (~50 bytes de payload), lo que permite archivos de cualquier tamaño sin límite de infraestructura.
@@ -26,9 +26,9 @@ Usuario → GCS directo (PUT con Signed URL)
 | Tipo | Formato de nombre | Carpeta en GCS | Columnas requeridas |
 |---|---|---|---|
 | **Viajes** | `viajes-YYYY-MM.csv` | `viajes/` | `Genero_Usuario, Edad_Usuario, Bici, Ciclo_Estacion_Retiro, Fecha_Retiro, Hora_Retiro, Ciclo_EstacionArribo, Fecha_Arribo, Hora_Arribo` |
-| **Ciclovías** | `ciclovias-YYYY-MM.csv` | `ciclovias/` | `sistema, num_cicloe, calle_prin, calle_secu, colonia, alcaldia, latitud, longitud, sitio_de_e, estatus` |
+| **Estaciones** | `estaciones-YYYY-MM.csv` | `estaciones/` | `sistema, num_cicloe, calle_prin, calle_secu, colonia, alcaldia, latitud, longitud, sitio_de_e, estatus` |
 
-Ejemplos válidos: `viajes-2026-01.csv`, `ciclovias-2026-03.csv`
+Ejemplos válidos: `viajes-2026-01.csv`, `estaciones-2026-03.csv`
 
 ---
 
@@ -79,7 +79,7 @@ bash deploy.sh ml-nube us-central1 ecobici-cdmx-datos
 El script:
 1. Habilita APIs (Cloud Run, GCS, Artifact Registry, Cloud Build)
 2. Crea el repositorio en Artifact Registry
-3. Crea el bucket y las carpetas `viajes/` y `ciclovias/`
+3. Crea el bucket y las carpetas `viajes/` y `estaciones/`
 4. Asigna permisos a Cloud Build y al service account de Cloud Run
 5. Construye la imagen Docker y la sube
 6. Despliega el servicio en Cloud Run
@@ -105,7 +105,7 @@ Cada push a `main` dispara build + redeploy automático:
 Antes de cualquier petición al servidor, el **cliente** valida:
 
 - Extensión `.csv`
-- Formato de nombre correcto (`viajes-YYYY-MM.csv` o `ciclovias-YYYY-MM.csv`)
+- Formato de nombre correcto (`viajes-YYYY-MM.csv` o `estaciones-YYYY-MM.csv`)
 - Archivo no vacío y menor a 300 MB
 - Columnas requeridas (lee los primeros 8 KB con FileReader)
 
