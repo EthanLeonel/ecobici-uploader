@@ -232,8 +232,7 @@
       submitBtn.disabled = false;
       document.getElementById('successText').textContent =
         `Se ha cargado exitosamente el archivo ${f.name}`;
-      document.getElementById('successPath').textContent =
-        `gs://{{ bucket }}/${blobPath}`;
+      document.getElementById('successPath').textContent = '';
       show([successMsg]);
     });
 
