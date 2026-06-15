@@ -1,6 +1,5 @@
 import asyncio
 import csv
-import io
 import os
 import re
 
@@ -8,23 +7,47 @@ from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from google.cloud import storage
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+from starlette.middleware.base import BaseHTTPMiddleware
 
+# ── Rate limiting ─────────────────────────────────────────────────────────────
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="Ecobici Uploader")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 templates = Jinja2Templates(directory="templates")
 
+# ── Security headers middleware ───────────────────────────────────────────────
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' cdn.tailwindcss.com; "
+            "style-src 'self' 'unsafe-inline' cdn.tailwindcss.com; "
+            "connect-src 'self'"
+        )
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+
+# ── Config ────────────────────────────────────────────────────────────────────
 BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "ecobici-raw-data")
 GCS_FOLDER = os.environ.get("GCS_FOLDER", "raw")
+MAX_FILE_SIZE = int(os.environ.get("MAX_FILE_SIZE_MB", "300")) * 1024 * 1024
 
 REQUIRED_COLUMNS = {
-    "Genero_Usuario",
-    "Edad_Usuario",
-    "Bici",
-    "Ciclo_Estacion_Retiro",
-    "Fecha_Retiro",
-    "Hora_Retiro",
-    "Ciclo_EstacionArribo",
-    "Fecha_Arribo",
-    "Hora_Arribo",
+    "Genero_Usuario", "Edad_Usuario", "Bici",
+    "Ciclo_Estacion_Retiro", "Fecha_Retiro", "Hora_Retiro",
+    "Ciclo_EstacionArribo", "Fecha_Arribo", "Hora_Arribo",
 }
 
 FILENAME_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])\.csv$")
@@ -40,7 +63,8 @@ async def index(request: Request):
 
 
 @app.post("/upload")
-async def upload(file: UploadFile = File(...)):
+@limiter.limit("10/minute")
+async def upload(request: Request, file: UploadFile = File(...)):
     # 1. Extensión
     if not file.filename.lower().endswith(".csv"):
         raise HTTPException(status_code=400, detail="Solo se aceptan archivos .csv")
@@ -55,8 +79,16 @@ async def upload(file: UploadFile = File(...)):
             ),
         )
 
-    # 3. Leer primeros bytes para validar encabezados sin cargar todo en memoria
-    header_chunk = await file.read(16_384)  # 16 KB es suficiente para el header
+    # 3. Tamaño máximo (via Content-Length header)
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"El archivo excede el límite permitido de {MAX_FILE_SIZE // (1024*1024)} MB.",
+        )
+
+    # 4. Leer primeros bytes para validar encabezados sin cargar todo en memoria
+    header_chunk = await file.read(16_384)
 
     if not header_chunk:
         raise HTTPException(status_code=400, detail="El archivo está vacío.")
@@ -91,7 +123,7 @@ async def upload(file: UploadFile = File(...)):
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"Error al leer el CSV: {exc}")
 
-    # 4. Volver al inicio y subir a GCS en thread para no bloquear el event loop
+    # 5. Volver al inicio y subir a GCS en thread para no bloquear el event loop
     await file.seek(0)
     blob_path = f"{GCS_FOLDER}/{file.filename}" if GCS_FOLDER else file.filename
 
@@ -116,5 +148,4 @@ async def upload(file: UploadFile = File(...)):
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

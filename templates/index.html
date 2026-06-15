@@ -100,10 +100,24 @@
     const successMsg = document.getElementById('successMsg');
     const errorMsg   = document.getElementById('errorMsg');
 
-    // Click en zona → abre selector de archivos
+    const FILENAME_RE = /^\d{4}-(0[1-9]|1[0-2])\.csv$/;
+    const MAX_SIZE_MB = 300;
+
+    // Valida el archivo en el cliente ANTES de cualquier petición al servidor
+    function validateFile(f) {
+      if (!f.name.toLowerCase().endsWith('.csv'))
+        return 'Solo se aceptan archivos .csv';
+      if (!FILENAME_RE.test(f.name))
+        return `El nombre debe tener el formato YYYY-MM.csv (ej. 2026-01.csv). Se recibió: ${f.name}`;
+      if (f.size === 0)
+        return 'El archivo está vacío.';
+      if (f.size > MAX_SIZE_MB * 1024 * 1024)
+        return `El archivo supera el límite de ${MAX_SIZE_MB} MB.`;
+      return null;
+    }
+
     dropZone.addEventListener('click', () => fileInput.click());
 
-    // Drag & Drop
     dropZone.addEventListener('dragover', e => {
       e.preventDefault();
       dropZone.classList.add('border-green-400', 'bg-green-50');
@@ -123,19 +137,23 @@
     });
 
     function setFile(f) {
+      hide([successMsg, errorMsg]);
+      const err = validateFile(f);
+      if (err) { showError(err); return; }       // error inmediato, sin subir nada
       fileName.textContent = `📄 ${f.name}`;
       fileName.classList.remove('hidden');
-      // Inyectar en el input nativo para el FormData
       const dt = new DataTransfer();
       dt.items.add(f);
       fileInput.files = dt.files;
-      hide([successMsg, errorMsg]);
     }
 
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const f = fileInput.files[0];
       if (!f) { showError('Por favor selecciona un archivo CSV.'); return; }
+
+      const clientErr = validateFile(f);
+      if (clientErr) { showError(clientErr); return; }
 
       hide([successMsg, errorMsg]);
       show([progress]);
@@ -144,23 +162,28 @@
       try {
         const body = new FormData();
         body.append('file', f);
-        const res  = await fetch('/upload', { method: 'POST', body });
-        const data = await res.json();
+        const res = await fetch('/upload', { method: 'POST', body });
 
-        hide([progress]);
-        submitBtn.disabled = false;
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          showError(`Error del servidor (${res.status}). Intenta de nuevo.`);
+          return;
+        }
 
         if (res.ok) {
           document.getElementById('successText').textContent = data.message;
           document.getElementById('successPath').textContent = data.destino;
           show([successMsg]);
         } else {
-          showError(data.detail || 'Error desconocido.');
+          showError(data.detail || 'Error desconocido del servidor.');
         }
-      } catch {
+      } catch (err) {
+        showError('No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.');
+      } finally {
         hide([progress]);
         submitBtn.disabled = false;
-        showError('Error de red. Verifica tu conexión e intenta de nuevo.');
       }
     });
 
