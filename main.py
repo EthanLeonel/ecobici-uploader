@@ -33,7 +33,9 @@ FILENAME_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])\.csv$")
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse(
-        "index.html", {"request": request, "bucket": BUCKET_NAME}
+        request=request,
+        name="index.html",
+        context={"bucket": BUCKET_NAME},
     )
 
 
