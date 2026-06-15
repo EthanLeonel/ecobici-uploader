@@ -33,7 +33,7 @@ steps:
       - --memory=1Gi
       - --timeout=300
       - --max-instances=3
-      - --set-env-vars=GCS_BUCKET_NAME=${_BUCKET},GCS_FOLDER=raw
+      - --set-env-vars=GCS_BUCKET_NAME=${_BUCKET}
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA

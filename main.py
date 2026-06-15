@@ -34,7 +34,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' cdn.tailwindcss.com; "
             "style-src 'self' 'unsafe-inline' cdn.tailwindcss.com; "
-            "connect-src 'self' https://storage.googleapis.com"  # permite XHR a GCS
+            "connect-src 'self' https://storage.googleapis.com"
         )
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
@@ -43,12 +43,33 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(SecurityHeadersMiddleware)
 
-# ── Config ────────────────────────────────────────────────────────────────────
-BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", "ecobici-raw-data")
-GCS_FOLDER = os.environ.get("GCS_FOLDER", "raw")
-SIGNED_URL_TTL = 15  # minutos de validez para la URL firmada
+# ── Tipos de archivo ──────────────────────────────────────────────────────────
+VIAJES_RE    = re.compile(r"^viajes-\d{4}-(0[1-9]|1[0-2])\.csv$")
+CICLOVIAS_RE = re.compile(r"^ciclovias-\d{4}-(0[1-9]|1[0-2])\.csv$")
 
-FILENAME_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])\.csv$")
+VIAJES_COLS = {
+    "Genero_Usuario", "Edad_Usuario", "Bici",
+    "Ciclo_Estacion_Retiro", "Fecha_Retiro", "Hora_Retiro",
+    "Ciclo_EstacionArribo", "Fecha_Arribo", "Hora_Arribo",
+}
+
+CICLOVIAS_COLS = {
+    "sistema", "num_cicloe", "calle_prin", "calle_secu",
+    "colonia", "alcaldia", "latitud", "longitud", "sitio_de_e", "estatus",
+}
+
+# ── Config ────────────────────────────────────────────────────────────────────
+BUCKET_NAME    = os.environ.get("GCS_BUCKET_NAME", "ecobici-raw-data")
+SIGNED_URL_TTL = 15  # minutos
+
+
+def detect_type(filename: str):
+    """Devuelve (tipo, carpeta) según el prefijo del nombre, o (None, None) si no aplica."""
+    if VIAJES_RE.match(filename):
+        return "viajes", "viajes"
+    if CICLOVIAS_RE.match(filename):
+        return "ciclovias", "ciclovias"
+    return None, None
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -68,34 +89,29 @@ class UploadUrlRequest(BaseModel):
 @limiter.limit("10/minute")
 async def get_upload_url(request: Request, body: UploadUrlRequest):
     """
-    Valida el nombre del archivo y devuelve una Signed URL de GCS para que
-    el browser suba el archivo directamente sin pasar por Cloud Run.
-    Esto evita el límite de 32 MB del HTTP load balancer y permite archivos
-    de cualquier tamaño.
+    Valida el nombre del archivo, detecta el tipo (viajes / ciclovias) y
+    devuelve una Signed URL de GCS para upload directo desde el browser.
     """
     filename = body.filename.strip()
 
-    if not filename.lower().endswith(".csv"):
-        raise HTTPException(400, "Solo se aceptan archivos .csv")
-
-    if not FILENAME_RE.match(filename):
+    tipo, carpeta = detect_type(filename)
+    if tipo is None:
         raise HTTPException(
             400,
-            f"El nombre debe tener el formato YYYY-MM.csv "
-            f"(ej. 2026-01.csv). Se recibió: {filename}",
+            "El nombre debe ser viajes-YYYY-MM.csv o ciclovias-YYYY-MM.csv "
+            f"(ej. viajes-2026-01.csv). Se recibió: {filename}",
         )
 
-    blob_path = f"{GCS_FOLDER}/{filename}" if GCS_FOLDER else filename
+    blob_path = f"{carpeta}/{filename}"
 
     try:
-        # Usar las credenciales del service account de Cloud Run para firmar
         credentials, _ = google.auth.default()
         auth_req = google.auth.transport.requests.Request()
         credentials.refresh(auth_req)
 
         client = storage.Client()
         bucket = client.bucket(BUCKET_NAME)
-        blob = bucket.blob(blob_path)
+        blob   = bucket.blob(blob_path)
 
         signed_url = blob.generate_signed_url(
             version="v4",
@@ -108,7 +124,7 @@ async def get_upload_url(request: Request, body: UploadUrlRequest):
     except Exception as exc:
         raise HTTPException(500, f"Error al generar URL de carga: {exc}")
 
-    return {"signed_url": signed_url, "blob_path": blob_path}
+    return {"signed_url": signed_url, "blob_path": blob_path, "tipo": tipo}
 
 
 if __name__ == "__main__":
