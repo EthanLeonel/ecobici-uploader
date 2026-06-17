@@ -244,8 +244,27 @@
       hideAll(tipo);
       btn.disabled = true;
 
-      // 1. Validar columnas
-      setProgress(tipo, 'Validando columnas…', 2);
+      // 1. Verificar si la carpeta ya tiene archivos
+      setProgress(tipo, 'Verificando disponibilidad…', 2);
+      try {
+        const chk = await fetch(`/check-folder/${tipo}`);
+        const chkData = await chk.json();
+        if (!chk.ok) throw new Error();
+        if (chkData.occupied) {
+          showErr(tipo, 'Ya hay un archivo en proceso en esta carpeta. Si crees que es un error, contacta a sistemas.');
+          btn.disabled = false;
+          hide(`prog-${tipo}`);
+          return;
+        }
+      } catch (e) {
+        if (e.message) { showErr(tipo, e.message); } else { showErr(tipo, 'No se pudo verificar el estado de la carpeta.'); }
+        btn.disabled = false;
+        hide(`prog-${tipo}`);
+        return;
+      }
+
+      // 2. Validar columnas
+      setProgress(tipo, 'Validando columnas…', 8);
       try {
         await validateColumns(tipo, f);
       } catch (err) {

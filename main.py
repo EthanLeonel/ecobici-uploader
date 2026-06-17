@@ -85,6 +85,27 @@ class UploadUrlRequest(BaseModel):
     filename: str
 
 
+TIPOS_VALIDOS = {"viajes", "estaciones"}
+
+
+@app.get("/check-folder/{tipo}")
+@limiter.limit("10/minute")
+async def check_folder(request: Request, tipo: str):
+    """Devuelve si ya existe algún archivo en la carpeta del tipo dado."""
+    if tipo not in TIPOS_VALIDOS:
+        raise HTTPException(400, "Tipo inválido")
+    try:
+        client = storage.Client()
+        bucket = client.bucket(BUCKET_NAME)
+        blobs = [
+            b for b in bucket.list_blobs(prefix=f"{tipo}/", max_results=2)
+            if b.name != f"{tipo}/"
+        ]
+        return {"occupied": len(blobs) > 0}
+    except Exception as exc:
+        raise HTTPException(500, f"Error al verificar carpeta: {exc}")
+
+
 @app.post("/get-upload-url")
 @limiter.limit("10/minute")
 async def get_upload_url(request: Request, body: UploadUrlRequest):
