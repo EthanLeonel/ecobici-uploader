@@ -62,7 +62,7 @@ gcloud run deploy "$SERVICE" \
   --memory 1Gi \
   --timeout 300 \
   --max-instances 3 \
-  --set-env-vars "GCS_BUCKET_NAME=${BUCKET},GCS_FOLDER=raw" \
+  --set-env-vars "GCS_BUCKET_NAME=${BUCKET}" \
   --project="$PROJECT_ID"
 
 URL=$(gcloud run services describe "$SERVICE" \

@@ -8,7 +8,7 @@
 </head>
 <body class="bg-gray-50 min-h-screen font-sans">
 
-  <div class="max-w-2xl mx-auto px-4 py-12">
+  <div class="max-w-4xl mx-auto px-4 py-10">
 
     <!-- Header -->
     <div class="text-center mb-8">
@@ -17,120 +17,211 @@
     </div>
 
     <!-- Instrucciones -->
-    <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6 text-sm">
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-8 text-sm">
       <h2 class="font-semibold text-blue-800 mb-2 text-base">¿Cómo usar esta herramienta?</h2>
       <ul class="text-blue-700 space-y-1 list-disc list-inside leading-relaxed">
-        <li>Renombra el archivo con el formato <strong>YYYY-MM.csv</strong>
-            &nbsp;— ejemplo: <code class="bg-blue-100 px-1 rounded">2026-01.csv</code></li>
-        <li>Arrastra o selecciona el archivo en el área de abajo y haz clic en <strong>Subir</strong>.</li>
-        <li>Cada mes tiene su archivo independiente; no se sobreescriben otros meses.</li>
+        <li>Renombra el archivo de viajes con el formato <strong>viajes-YYYY-MM.csv</strong>
+            &nbsp;— ejemplo: <code class="bg-blue-100 px-1 rounded">viajes-2026-01.csv</code></li>
+        <li>Renombra el archivo de estaciones con el formato <strong>estaciones-YYYY-MM.csv</strong>
+            &nbsp;— ejemplo: <code class="bg-blue-100 px-1 rounded">estaciones-2026-01.csv</code></li>
+        <li>Sube cada archivo en su sección correspondiente.</li>
       </ul>
     </div>
 
-    <!-- Card de carga -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <form id="uploadForm" novalidate>
-        <div
-          id="dropZone"
-          class="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer
-                 hover:border-green-400 hover:bg-green-50 transition-all"
-        >
-          <div class="text-5xl mb-2">📂</div>
-          <p class="text-gray-600 font-medium">Arrastra tu archivo CSV aquí</p>
-          <p class="text-gray-400 text-sm mt-1">o haz clic para seleccionar</p>
-          <input type="file" id="fileInput" accept=".csv" class="hidden" />
-          <p id="fileName" class="mt-3 text-green-600 font-semibold text-sm hidden"></p>
+    <!-- Dos secciones lado a lado -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- ── SECCIÓN VIAJES ─────────────────────────────────────────── -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col">
+        <div class="mb-4">
+          <span class="inline-flex items-center gap-2 bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
+            🚴 Viajes
+          </span>
+          <p class="text-xs text-gray-400 mt-1">viajes-YYYY-MM.csv</p>
         </div>
 
-        <button
-          type="submit"
-          id="submitBtn"
-          class="mt-5 w-full bg-green-600 hover:bg-green-700 active:bg-green-800
-                 text-white font-semibold py-3 px-6 rounded-lg transition-colors
-                 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          Subir a Cloud Storage
-        </button>
-      </form>
+        <form id="form-viajes" novalidate class="flex flex-col flex-1">
+          <div id="drop-viajes"
+            class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer
+                   hover:border-green-400 hover:bg-green-50 transition-all flex-1 flex flex-col justify-center">
+            <div class="text-3xl mb-1">📂</div>
+            <p class="text-gray-600 text-sm font-medium">Arrastra tu archivo aquí</p>
+            <p class="text-gray-400 text-xs mt-1">o haz clic para seleccionar</p>
+            <input type="file" id="input-viajes" accept=".csv" class="hidden" />
+            <p id="name-viajes" class="mt-2 text-green-600 font-semibold text-xs hidden"></p>
+          </div>
 
-      <!-- Progreso -->
-      <div id="progressArea" class="hidden mt-5">
-        <p id="progressLabel" class="text-sm text-gray-500 mb-2 flex items-center gap-2">
-          <svg class="animate-spin h-4 w-4 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-          </svg>
-          <span id="progressLabelText"></span>
-        </p>
-        <div class="w-full bg-gray-100 rounded-full h-2.5">
-          <div id="progressBar"
-               class="bg-green-500 h-2.5 rounded-full transition-all duration-300 ease-out"
-               style="width:0%"></div>
+          <button type="submit"
+            class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-semibold
+                   py-2.5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm">
+            Subir
+          </button>
+        </form>
+
+        <div id="prog-viajes" class="hidden mt-4">
+          <p id="prog-label-viajes" class="text-xs text-gray-500 mb-1 flex items-center gap-1">
+            <svg class="animate-spin h-3 w-3 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            <span id="prog-text-viajes"></span>
+          </p>
+          <div class="w-full bg-gray-100 rounded-full h-2">
+            <div id="prog-bar-viajes" class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width:0%"></div>
+          </div>
+          <p id="prog-pct-viajes" class="text-xs text-gray-400 mt-0.5 text-right">0%</p>
         </div>
-        <p id="progressPct" class="text-xs text-gray-400 mt-1 text-right">0%</p>
-      </div>
 
-      <!-- Éxito -->
-      <div id="successMsg"
-        class="hidden mt-5 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-        <span class="text-green-500 text-2xl shrink-0">✅</span>
-        <div>
-          <p id="successText" class="font-semibold text-green-800 text-sm"></p>
-          <p id="successPath" class="text-green-600 text-xs mt-1 font-mono break-all"></p>
+        <div id="ok-viajes" class="hidden mt-4 bg-green-50 border border-green-200 rounded-lg p-3 flex items-start gap-2">
+          <span class="text-green-500 shrink-0">✅</span>
+          <p id="ok-text-viajes" class="text-green-800 text-xs font-semibold"></p>
+        </div>
+        <div id="err-viajes" class="hidden mt-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+          <span class="text-red-500 shrink-0">❌</span>
+          <p id="err-text-viajes" class="text-red-700 text-xs"></p>
         </div>
       </div>
 
-      <!-- Error -->
-      <div id="errorMsg"
-        class="hidden mt-5 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-        <span class="text-red-500 text-2xl shrink-0">❌</span>
-        <p id="errorText" class="text-red-700 text-sm"></p>
-      </div>
-    </div>
+      <!-- ── SECCIÓN ESTACIONES ────────────────────────────────────── -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col">
+        <div class="mb-4">
+          <span class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
+            📍 Estaciones
+          </span>
+          <p class="text-xs text-gray-400 mt-1">estaciones-YYYY-MM.csv</p>
+        </div>
 
+        <form id="form-estaciones" novalidate class="flex flex-col flex-1">
+          <div id="drop-estaciones"
+            class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer
+                   hover:border-blue-400 hover:bg-blue-50 transition-all flex-1 flex flex-col justify-center">
+            <div class="text-3xl mb-1">📂</div>
+            <p class="text-gray-600 text-sm font-medium">Arrastra tu archivo aquí</p>
+            <p class="text-gray-400 text-xs mt-1">o haz clic para seleccionar</p>
+            <input type="file" id="input-estaciones" accept=".csv" class="hidden" />
+            <p id="name-estaciones" class="mt-2 text-blue-600 font-semibold text-xs hidden"></p>
+          </div>
+
+          <button type="submit"
+            class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold
+                   py-2.5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm">
+            Subir
+          </button>
+        </form>
+
+        <div id="prog-estaciones" class="hidden mt-4">
+          <p id="prog-label-estaciones" class="text-xs text-gray-500 mb-1 flex items-center gap-1">
+            <svg class="animate-spin h-3 w-3 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            <span id="prog-text-estaciones"></span>
+          </p>
+          <div class="w-full bg-gray-100 rounded-full h-2">
+            <div id="prog-bar-estaciones" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width:0%"></div>
+          </div>
+          <p id="prog-pct-estaciones" class="text-xs text-gray-400 mt-0.5 text-right">0%</p>
+        </div>
+
+        <div id="ok-estaciones" class="hidden mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+          <span class="text-blue-500 shrink-0">✅</span>
+          <p id="ok-text-estaciones" class="text-blue-800 text-xs font-semibold"></p>
+        </div>
+        <div id="err-estaciones" class="hidden mt-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+          <span class="text-red-500 shrink-0">❌</span>
+          <p id="err-text-estaciones" class="text-red-700 text-xs"></p>
+        </div>
+      </div>
+
+    </div><!-- /grid -->
   </div>
 
   <script>
-    const dropZone      = document.getElementById('dropZone');
-    const fileInput     = document.getElementById('fileInput');
-    const fileName      = document.getElementById('fileName');
-    const form          = document.getElementById('uploadForm');
-    const submitBtn     = document.getElementById('submitBtn');
-    const progressArea  = document.getElementById('progressArea');
-    const progressBar   = document.getElementById('progressBar');
-    const progressPct   = document.getElementById('progressPct');
-    const progressLabelText = document.getElementById('progressLabelText');
-    const successMsg    = document.getElementById('successMsg');
-    const errorMsg      = document.getElementById('errorMsg');
+    // ── Config por tipo ───────────────────────────────────────────────────────
+    const TIPOS = {
+      viajes: {
+        re: /^viajes-\d{4}-(0[1-9]|1[0-2])\.csv$/,
+        cols: ['Genero_Usuario','Edad_Usuario','Bici',
+               'Ciclo_Estacion_Retiro','Fecha_Retiro','Hora_Retiro',
+               'Ciclo_EstacionArribo','Fecha_Arribo','Hora_Arribo'],
+        ejemplo: 'viajes-2026-01.csv',
+      },
+      estaciones: {
+        re: /^estaciones-\d{4}-(0[1-9]|1[0-2])\.csv$/,
+        cols: ['sistema','num_cicloe','calle_prin','calle_secu',
+               'colonia','alcaldia','latitud','longitud','sitio_de_e','estatus'],
+        ejemplo: 'estaciones-2026-01.csv',
+      },
+    };
 
-    const FILENAME_RE = /^\d{4}-(0[1-9]|1[0-2])\.csv$/;
-    const MAX_SIZE_MB = 300;
-    const REQUIRED_COLS = [
-      'Genero_Usuario','Edad_Usuario','Bici',
-      'Ciclo_Estacion_Retiro','Fecha_Retiro','Hora_Retiro',
-      'Ciclo_EstacionArribo','Fecha_Arribo','Hora_Arribo'
-    ];
+    const MAX_MB = 300;
 
-    // ── Validaciones ─────────────────────────────────────────────────────────
-    function validateMeta(f) {
+    // ── Inicializar cada sección ───────────────────────────────────────────────
+    ['viajes', 'estaciones'].forEach(tipo => {
+      const cfg      = TIPOS[tipo];
+      const dropZone = document.getElementById(`drop-${tipo}`);
+      const fileInput= document.getElementById(`input-${tipo}`);
+      const form     = document.getElementById(`form-${tipo}`);
+
+      dropZone.addEventListener('click', () => fileInput.click());
+
+      dropZone.addEventListener('dragover', e => {
+        e.preventDefault();
+        dropZone.classList.add(tipo === 'viajes' ? 'border-green-400' : 'border-blue-400',
+                               tipo === 'viajes' ? 'bg-green-50'      : 'bg-blue-50');
+      });
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-green-400','bg-green-50','border-blue-400','bg-blue-50');
+      });
+      dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('border-green-400','bg-green-50','border-blue-400','bg-blue-50');
+        const f = e.dataTransfer.files[0];
+        if (f) setFile(tipo, f);
+      });
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files[0]) setFile(tipo, fileInput.files[0]);
+      });
+
+      form.addEventListener('submit', e => { e.preventDefault(); handleUpload(tipo); });
+    });
+
+    // ── Establecer archivo seleccionado ───────────────────────────────────────
+    function setFile(tipo, f) {
+      hideAll(tipo);
+      const err = validateMeta(tipo, f);
+      if (err) { showErr(tipo, err); return; }
+      const nameEl = document.getElementById(`name-${tipo}`);
+      nameEl.textContent = `📄 ${f.name}`;
+      nameEl.classList.remove('hidden');
+      // Inyectar en el input para el submit
+      const dt = new DataTransfer();
+      dt.items.add(f);
+      document.getElementById(`input-${tipo}`).files = dt.files;
+    }
+
+    // ── Validación de metadatos (sin red) ─────────────────────────────────────
+    function validateMeta(tipo, f) {
+      const cfg = TIPOS[tipo];
       if (!f.name.toLowerCase().endsWith('.csv'))
         return 'Solo se aceptan archivos .csv';
-      if (!FILENAME_RE.test(f.name))
-        return `El nombre debe tener el formato YYYY-MM.csv (ej. 2026-01.csv). Se recibió: ${f.name}`;
+      if (!cfg.re.test(f.name))
+        return `El nombre debe ser ${cfg.ejemplo.replace(/\d{4}/,'YYYY').replace(/\d{2}\.csv$/,'MM.csv')} (ej. ${cfg.ejemplo}). Se recibió: ${f.name}`;
       if (f.size === 0)
         return 'El archivo está vacío.';
-      if (f.size > MAX_SIZE_MB * 1024 * 1024)
-        return `El archivo supera el límite de ${MAX_SIZE_MB} MB.`;
+      if (f.size > MAX_MB * 1024 * 1024)
+        return `El archivo supera el límite de ${MAX_MB} MB.`;
       return null;
     }
 
-    function validateColumns(f) {
+    // ── Validación de columnas (FileReader, primeros 8 KB) ────────────────────
+    function validateColumns(tipo, f) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = e => {
           const firstLine = (e.target.result || '').split('\n')[0] || '';
-          const cols = firstLine.split(',').map(c => c.trim().replace(/\r/g, ''));
-          const missing = REQUIRED_COLS.filter(c => !cols.includes(c));
+          const cols = firstLine.split(',').map(c => c.trim().replace(/\r/g,''));
+          const missing = TIPOS[tipo].cols.filter(c => !cols.includes(c));
           if (missing.length > 0)
             reject(`Columnas faltantes: ${missing.join(', ')}`);
           else
@@ -141,61 +232,51 @@
       });
     }
 
-    // ── Drag & Drop ──────────────────────────────────────────────────────────
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', e => {
-      e.preventDefault();
-      dropZone.classList.add('border-green-400', 'bg-green-50');
-    });
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('border-green-400', 'bg-green-50');
-    });
-    dropZone.addEventListener('drop', e => {
-      e.preventDefault();
-      dropZone.classList.remove('border-green-400', 'bg-green-50');
-      const f = e.dataTransfer.files[0];
-      if (f) setFile(f);
-    });
-    fileInput.addEventListener('change', () => {
-      if (fileInput.files[0]) setFile(fileInput.files[0]);
-    });
+    // ── Flujo de upload ───────────────────────────────────────────────────────
+    async function handleUpload(tipo) {
+      const f = document.getElementById(`input-${tipo}`).files[0];
+      if (!f) { showErr(tipo, 'Por favor selecciona un archivo.'); return; }
 
-    function setFile(f) {
-      hide([successMsg, errorMsg]);
-      const err = validateMeta(f);
-      if (err) { showError(err); return; }
-      fileName.textContent = `📄 ${f.name}`;
-      fileName.classList.remove('hidden');
-      const dt = new DataTransfer();
-      dt.items.add(f);
-      fileInput.files = dt.files;
-    }
+      const metaErr = validateMeta(tipo, f);
+      if (metaErr) { showErr(tipo, metaErr); return; }
 
-    // ── Submit ────────────────────────────────────────────────────────────────
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const f = fileInput.files[0];
-      if (!f) { showError('Por favor selecciona un archivo CSV.'); return; }
+      const btn = document.querySelector(`#form-${tipo} button`);
+      hideAll(tipo);
+      btn.disabled = true;
 
-      const metaErr = validateMeta(f);
-      if (metaErr) { showError(metaErr); return; }
-
-      hide([successMsg, errorMsg]);
-      submitBtn.disabled = true;
-
-      // Paso 1: validar columnas leyendo solo los primeros 8 KB
-      setProgress('Validando columnas…', 2);
+      // 1. Verificar si la carpeta ya tiene archivos
+      setProgress(tipo, 'Verificando disponibilidad…', 2);
       try {
-        await validateColumns(f);
-      } catch (err) {
-        showError(err);
-        reset();
+        const chk = await fetch(`/check-folder/${tipo}`);
+        const chkData = await chk.json();
+        if (!chk.ok) throw new Error();
+        if (chkData.occupied) {
+          showErr(tipo, 'Ya hay un archivo en proceso en esta carpeta. Si crees que es un error, contacta a sistemas.');
+          btn.disabled = false;
+          hide(`prog-${tipo}`);
+          return;
+        }
+      } catch (e) {
+        if (e.message) { showErr(tipo, e.message); } else { showErr(tipo, 'No se pudo verificar el estado de la carpeta.'); }
+        btn.disabled = false;
+        hide(`prog-${tipo}`);
         return;
       }
 
-      // Paso 2: obtener Signed URL del servidor (request ligero, sin el archivo)
-      setProgress('Preparando carga…', 8);
-      let signedUrl, blobPath;
+      // 2. Validar columnas
+      setProgress(tipo, 'Validando columnas…', 8);
+      try {
+        await validateColumns(tipo, f);
+      } catch (err) {
+        showErr(tipo, err);
+        btn.disabled = false;
+        hide(`prog-${tipo}`);
+        return;
+      }
+
+      // 2. Obtener Signed URL
+      setProgress(tipo, 'Preparando carga…', 8);
+      let signedUrl;
       try {
         const res = await fetch('/get-upload-url', {
           method: 'POST',
@@ -204,85 +285,76 @@
         });
         let data;
         try { data = await res.json(); } catch { data = {}; }
-        if (!res.ok) {
-          showError(data.detail || `Error del servidor (${res.status})`);
-          reset();
-          return;
-        }
+        if (!res.ok) { showErr(tipo, data.detail || `Error del servidor (${res.status})`); btn.disabled = false; hide(`prog-${tipo}`); return; }
         signedUrl = data.signed_url;
-        blobPath  = data.blob_path;
       } catch {
-        showError('No se pudo conectar con el servidor. Verifica tu conexión.');
-        reset();
+        showErr(tipo, 'No se pudo conectar con el servidor.');
+        btn.disabled = false;
+        hide(`prog-${tipo}`);
         return;
       }
 
-      // Paso 3: subir el archivo DIRECTO a GCS con progreso real (XHR)
-      setProgress('Subiendo archivo…', 10);
+      // 3. Upload directo a GCS con progreso
+      setProgress(tipo, 'Subiendo archivo…', 10);
       try {
-        await uploadToGCS(signedUrl, f);
+        await uploadToGCS(tipo, signedUrl, f);
       } catch (err) {
-        showError(err.message || 'Error al subir el archivo.');
-        reset();
+        showErr(tipo, err.message || 'Error al subir el archivo.');
+        btn.disabled = false;
+        hide(`prog-${tipo}`);
         return;
       }
 
       // Éxito
-      hide([progressArea]);
-      submitBtn.disabled = false;
-      document.getElementById('successText').textContent =
+      hide(`prog-${tipo}`);
+      btn.disabled = false;
+      document.getElementById(`ok-text-${tipo}`).textContent =
         `Se ha cargado exitosamente el archivo ${f.name}`;
-      document.getElementById('successPath').textContent = '';
-      show([successMsg]);
-    });
+      show(`ok-${tipo}`);
+    }
 
-    function uploadToGCS(url, file) {
+    function uploadToGCS(tipo, url, file) {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('PUT', url);
         xhr.setRequestHeader('Content-Type', 'text/csv');
-
-        xhr.upload.onprogress = (e) => {
+        xhr.upload.onprogress = e => {
           if (e.lengthComputable) {
             const pct = 10 + Math.round((e.loaded / e.total) * 90);
-            setProgress(
-              `Subiendo… ${fmt(e.loaded)} / ${fmt(e.total)}`,
-              pct
-            );
+            setProgress(tipo, `Subiendo… ${fmt(e.loaded)} / ${fmt(e.total)}`, pct);
           }
         };
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) resolve();
-          else reject(new Error(`Error al guardar en Cloud Storage (${xhr.status}). Intenta de nuevo.`));
-        };
-        xhr.onerror = () => reject(new Error('Error de red al subir el archivo.'));
+        xhr.onload  = () => xhr.status < 300 ? resolve() : reject(new Error(`Error GCS (${xhr.status})`));
+        xhr.onerror = () => reject(new Error('Error de red al subir.'));
         xhr.send(file);
       });
     }
 
     // ── Utilidades ────────────────────────────────────────────────────────────
-    function setProgress(label, pct) {
-      show([progressArea]);
-      progressLabelText.textContent = label;
-      progressBar.style.width = pct + '%';
-      progressPct.textContent = pct + '%';
+    function setProgress(tipo, label, pct) {
+      show(`prog-${tipo}`);
+      document.getElementById(`prog-text-${tipo}`).textContent = label;
+      document.getElementById(`prog-bar-${tipo}`).style.width  = pct + '%';
+      document.getElementById(`prog-pct-${tipo}`).textContent  = pct + '%';
     }
 
-    function reset() {
-      hide([progressArea]);
-      submitBtn.disabled = false;
+    function hideAll(tipo) {
+      hide(`ok-${tipo}`);
+      hide(`err-${tipo}`);
+      hide(`prog-${tipo}`);
+    }
+
+    function show(id) { document.getElementById(id).classList.remove('hidden'); }
+    function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function showErr(tipo, msg) {
+      document.getElementById(`err-text-${tipo}`).textContent = msg;
+      show(`err-${tipo}`);
     }
 
     function fmt(bytes) {
       if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
       return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-    }
-
-    function show(els) { els.forEach(el => el.classList.remove('hidden')); }
-    function hide(els) { els.forEach(el => el.classList.add('hidden')); }
-    function showError(msg) {
-      document.getElementById('errorText').textContent = msg;
-      show([errorMsg]);
     }
   </script>
 </body>
